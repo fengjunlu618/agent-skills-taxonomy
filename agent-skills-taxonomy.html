@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Skills 类型全景</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B1120'/%3E%3Crect x='9' y='9' width='14' height='14' rx='3' fill='none' stroke='%232DD4BF' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%232DD4BF'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0B1120;
+    --bg-soft:#0F172A;
+    --panel:#111B31;
+    --panel-2:#0D1626;
+    --line:#1E2A44;
+    --line-soft:#16213A;
+    --ink:#E6ECF7;
+    --ink-2:#9DB0CC;
+    --ink-3:#6B7E9C;
+    --accent:#2DD4BF;
+    --accent-dim:#1B6E66;
+    --warn:#F5A623;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Source Han Sans SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* ===== 背景材质层 ===== */
+  .bg-layer{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(1200px 520px at 78% -10%, rgba(45,212,191,.10), transparent 60%),
+      radial-gradient(900px 480px at -8% 18%, rgba(56,116,203,.12), transparent 55%);
+  }
+  .bg-grid{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(120,148,200,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,148,200,.05) 1px, transparent 1px);
+    background-size:56px 56px;
+    mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 75%);
+    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 75%);
+  }
+  .bg-noise{
+    position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .wrap{
+    position:relative;z-index:1;
+    max-width:1120px;margin:0 auto;padding:0 20px;
+  }
+
+  /* ===== Hero ===== */
+  header.hero{
+    padding:96px 0 64px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .kicker{
+    display:inline-flex;align-items:center;gap:10px;
+    font-size:13px;color:var(--accent);letter-spacing:.18em;
+    margin-bottom:22px;
+  }
+  .kicker::before{
+    content:"";width:26px;height:1px;background:var(--accent);opacity:.7;
+  }
+  h1{
+    font-size:clamp(34px,6.2vw,58px);
+    font-weight:800;line-height:1.12;letter-spacing:-.02em;
+    max-width:14em;
+  }
+  .hero-sub{
+    margin-top:22px;font-size:clamp(15px,2vw,18px);color:var(--ink-2);
+    max-width:34em;
+  }
+  .hero-note{
+    margin-top:14px;font-size:14px;color:var(--ink-3);
+  }
+  .hero-rule{
+    margin-top:52px;
+    display:flex;flex-wrap:wrap;gap:10px;
+    font-size:13.5px;color:var(--ink-2);
+  }
+  .hero-rule span{
+    border:1px solid var(--line);border-radius:999px;
+    padding:6px 14px;background:var(--panel-2);
+  }
+  .hero-rule b{color:var(--accent);font-weight:600}
+
+  /* ===== 章节 ===== */
+  section{ padding:64px 0; border-bottom:1px solid var(--line-soft); }
+  .sec-head{ margin-bottom:34px; }
+  .sec-no{
+    font-family:var(--mono);font-size:13px;color:var(--accent);
+    letter-spacing:.14em;margin-bottom:10px;
+  }
+  h2{
+    font-size:clamp(22px,3.4vw,30px);font-weight:700;letter-spacing:-.01em;
+  }
+  .sec-desc{
+    margin-top:10px;font-size:15px;color:var(--ink-2);max-width:44em;
+  }
+
+  /* ===== 类型卡片 ===== */
+  .grid-types{
+    display:grid;grid-template-columns:1fr;gap:14px;
+  }
+  @media (min-width:640px){
+    .grid-types{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (min-width:1024px){
+    .grid-types{grid-template-columns:repeat(4,1fr)}
+  }
+  .type-card{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 20px 20px;
+    display:flex;flex-direction:column;gap:10px;
+    transition:border-color .25s ease, transform .25s ease;
+    min-height:208px;
+  }
+  .type-card:hover{
+    border-color:var(--accent-dim);
+    transform:translateY(-3px);
+  }
+  .type-idx{
+    font-family:var(--mono);font-size:12px;color:var(--ink-3);
+    letter-spacing:.1em;
+  }
+  .type-name{
+    font-size:18px;font-weight:700;color:var(--ink);letter-spacing:.01em;
+  }
+  .type-desc{
+    font-size:13.5px;color:var(--ink-2);line-height:1.65;
+  }
+  .type-compose{
+    font-size:12.5px;color:var(--ink-3);line-height:1.6;
+  }
+  .type-compose code{
+    font-family:var(--mono);color:var(--ink-2);font-size:12px;
+  }
+  .badge{
+    margin-top:auto;
+    align-self:flex-start;
+    font-size:12px;font-weight:600;
+    border-radius:999px;padding:4px 11px;
+    letter-spacing:.03em;
+  }
+  .badge.ok{ color:var(--accent); background:rgba(45,212,191,.10); border:1px solid rgba(45,212,191,.28); }
+  .badge.warn{ color:var(--warn); background:rgba(245,166,35,.09); border:1px solid rgba(245,166,35,.30); }
+
+  /* ===== 目录结构 ===== */
+  .struct-grid{
+    display:grid;grid-template-columns:1fr;gap:16px;
+  }
+  @media (min-width:900px){
+    .struct-grid{grid-template-columns:1.15fr .85fr;align-items:stretch}
+  }
+  .tree-panel{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px;
+  }
+  .tree-panel .tree-title{
+    font-size:12.5px;color:var(--ink-3);letter-spacing:.12em;margin-bottom:16px;
+  }
+  pre.tree{
+    font-family:var(--mono);font-size:13px;line-height:1.75;color:var(--ink-2);
+    white-space:pre-wrap;overflow-x:auto;
+  }
+  pre.tree .c{color:var(--ink-3)}
+  pre.tree .hl{color:var(--accent)}
+  pre.tree .cm{color:#55688a}
+  .struct-aside{
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .struct-note{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    font-size:14px;color:var(--ink-2);line-height:1.75;
+  }
+  .struct-note b{color:var(--ink)}
+  .struct-note .term{
+    color:var(--accent);font-family:var(--mono);font-size:13px;font-weight:600;
+  }
+  .struct-fact{
+    display:flex;gap:14px;align-items:flex-start;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  }
+  .struct-fact .dot{
+    flex:none;width:8px;height:8px;border-radius:50%;
+    background:var(--accent);margin-top:8px;
+  }
+  .struct-fact p{font-size:13.5px;color:var(--ink-2);line-height:1.7}
+  .struct-fact b{color:var(--ink)}
+
+  /* ===== 适用性分层带 ===== */
+  .fit-band{
+    display:grid;grid-template-columns:1fr;gap:14px;
+  }
+  @media (min-width:900px){
+    .fit-band{grid-template-columns:1fr 1fr;gap:18px}
+  }
+  .fit-card{
+    border-radius:14px;padding:22px 22px 20px;
+    border:1px solid var(--line);
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .fit-card.direct{background:linear-gradient(180deg, rgba(45,212,191,.08), rgba(45,212,191,.02) 55%), var(--panel);}
+  .fit-card.gated{background:linear-gradient(180deg, rgba(245,166,35,.07), rgba(245,166,35,.02) 55%), var(--panel);}
+  .fit-title{font-size:17px;font-weight:700}
+  .fit-card.direct .fit-title{color:var(--accent)}
+  .fit-card.gated .fit-title{color:var(--warn)}
+  .fit-sub{font-size:13.5px;color:var(--ink-2);line-height:1.7}
+  .fit-list{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:2px}
+  .fit-list li{
+    font-size:13px;color:var(--ink-2);line-height:1.6;
+    display:flex;gap:9px;align-items:flex-start;
+  }
+  .fit-list li::before{
+    content:"";flex:none;width:6px;height:6px;border-radius:50%;
+    background:var(--accent);margin-top:8px;opacity:.9;
+  }
+  .fit-card.gated .fit-list li::before{background:var(--warn)}
+
+  /* ===== 安全规则 ===== */
+  .sec-rules{
+    display:grid;grid-template-columns:1fr;gap:14px;
+  }
+  @media (min-width:900px){
+    .sec-rules{grid-template-columns:repeat(2,1fr)}
+  }
+  .rule-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px;
+  }
+  .rule-card .rule-tag{
+    font-family:var(--mono);font-size:12px;color:var(--accent);
+    letter-spacing:.1em;margin-bottom:10px;
+  }
+  .rule-card h3{font-size:16.5px;font-weight:700;margin-bottom:8px}
+  .rule-card p{font-size:13.5px;color:var(--ink-2);line-height:1.75}
+  .rule-card .src{
+    margin-top:12px;font-size:12px;color:var(--ink-3);
+    font-family:var(--mono);
+  }
+
+  /* ===== Footer ===== */
+  footer{
+    padding:56px 0 72px;
+  }
+  .foot-grid{
+    display:grid;grid-template-columns:1fr;gap:26px;
+  }
+  @media (min-width:760px){
+    .foot-grid{grid-template-columns:1.2fr 1fr;gap:60px}
+  }
+  .foot-brand p{font-size:14px;color:var(--ink-3);max-width:30em;line-height:1.8;margin-top:12px}
+  .foot-links h4{
+    font-size:13px;color:var(--ink-3);letter-spacing:.14em;margin-bottom:14px;font-weight:600;
+  }
+  .foot-links ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .foot-links a{
+    color:var(--ink-2);text-decoration:none;font-size:14px;
+    border-bottom:1px solid transparent;transition:color .2s,border-color .2s;
+  }
+  .foot-links a:hover{color:var(--accent);border-color:var(--accent-dim)}
+  .foot-note{
+    margin-top:48px;padding-top:20px;border-top:1px solid var(--line-soft);
+    font-size:12.5px;color:var(--ink-3);line-height:1.8;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{transition:none !important;transform:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="bg-layer" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-noise" aria-hidden="true"></div>
+
+<div class="wrap">
+
+  <!-- ===== 视图：Hero ===== -->
+  <header class="hero">
+    <div class="kicker">Skill 类型学 · Skills Over MCP</div>
+    <h1>Agent Skills 类型全景</h1>
+    <p class="hero-sub">官方规范并不给 Skill 分类型——所有 Skill 都是同一种格式：一个目录、一个 SKILL.md、若干可选附带文件。所谓「类型」，是内容形态的差异，决定它能否通过远程 MCP 直接消费。</p>
+    <p class="hero-note">依据 MCP 官方 Skills 扩展（SEP-2640）与 skillsovermcp.com 托管服务的实际行为整理。</p>
+    <div class="hero-rule">
+      <span>统一格式：<b>目录 + SKILL.md</b></span>
+      <span>可选附带：<b>references / scripts / examples / assets</b></span>
+      <span>8 种内容形态</span>
+    </div>
+  </header>
+
+  <!-- ===== 视图：八种类型 ===== -->
+  <section id="types">
+    <div class="sec-head">
+      <div class="sec-no">01 — 八种内容形态</div>
+      <h2>规则之外，还有七种形态</h2>
+      <p class="sec-desc">按「SKILL.md 里装的是什么」划分。前七类本质是文本指令，远程接入后由客户端已有能力执行；第八类携带真实代码，执行边界受官方安全规则约束。</p>
+    </div>
+
+    <div class="grid-types">
+      <article class="type-card">
+        <div class="type-idx">TYPE 01</div>
+        <div class="type-name">规则清单型</div>
+        <p class="type-desc">SKILL.md 内是规则、步骤与检查清单，AI 读取后按规则执行。最经典、数量最多的形态。</p>
+        <p class="type-compose">构成：<code>SKILL.md</code> 单文件即可<br>例：write-like-a-human · review-pr · triage-bug</p>
+        <span class="badge ok">远程直接可用</span>
+      </article>
+
+      <article class="type-card">
+        <div class="type-idx">TYPE 02</div>
+        <div class="type-name">知识参考型</div>
+        <p class="type-desc">主体在 references/ 目录：术语表、风格指南、行业知识、检查清单，SKILL.md 只是入口索引。</p>
+        <p class="type-compose">构成：<code>SKILL.md</code> + <code>references/*.md</code><br>例：review-pr 附带的 checklist.md</p>
+        <span class="badge ok">远程直接可用</span>
+      </article>
+
+      <article class="type-card">
+        <div class="type-idx">TYPE 03</div>
+        <div class="type-name">模板产出型</div>
+        <p class="type-desc">定义输出模板、文档结构、格式规范——邮件、报告、代码骨架，产出物照模板生成。</p>
+        <p class="type-compose">构成：<code>SKILL.md</code> + <code>examples/</code> 模板<br>例：报告结构、邮件模板类 Skill</p>
+        <span class="badge ok">远程直接可用</span>
+      </article>
+
+      <article class="type-card">
+        <div class="type-idx">TYPE 04</div>
+        <div class="type-name">示例驱动型</div>
+        <p class="type-desc">以输入输出范例为主，靠 few-shot 示例教模型模仿，比规则描述更直接。</p>
+        <p class="type-compose">构成：<code>SKILL.md</code> + <code>examples/</code> 范例对<br>例：风格转换、数据标注类 Skill</p>
+        <span class="badge ok">远程直接可用</span>
+      </article>
+
+      <article class="type-card">
+        <div class="type-idx">TYPE 05</div>
+        <div class="type-name">工具指引型</div>
+        <p class="type-desc">教模型「怎么用好某个已有工具或 API」——参数、调用顺序、注意事项，不携带工具本身。</p>
+        <p class="type-compose">构成：<code>SKILL.md</code> 使用说明<br>例：数据库查询、CLI 工具用法类 Skill</p>
+        <span class="badge ok">远程直接可用</span>
+      </article>
+
+      <article class="type-card">
+        <div class="type-idx">TYPE 06</div>
+        <div class="type-name">角色风格型</div>
+        <p class="type-desc">定义语气、人设与写作风格，让模型以特定声音输出，常见于品牌内容或个人化写作。</p>
+        <p class="type-compose">构成：<code>SKILL.md</code> + <code>references/</code> 风格样本<br>例：spencers-writing-style</p>
+        <span class="badge ok">远程直接可用</span>
+      </article>
+
+      <article class="type-card">
+        <div class="type-idx">TYPE 07</div>
+        <div class="type-name">工作流 SOP 型</div>
+        <p class="type-desc">多步骤标准流程、判断分支、阶段门，把一段完整作业拆成可逐步执行的操作序列。</p>
+        <p class="type-compose">构成：<code>SKILL.md</code> 分步定义<br>例：发布流程、质检 SOP 类 Skill</p>
+        <span class="badge ok">远程直接可用</span>
+      </article>
+
+      <article class="type-card">
+        <div class="type-idx">TYPE 08</div>
+        <div class="type-name">脚本执行型</div>
+        <p class="type-desc">携带 scripts/ 真实代码，需要运行。内容可以远程分发，但执行受「无隐式本地执行」规则约束。</p>
+        <p class="type-compose">构成：<code>SKILL.md</code> + <code>scripts/*.py|.sh</code><br>例：数据处理、自动化脚本类 Skill</p>
+        <span class="badge warn">可分发 · 执行需审批</span>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== 视图：统一格式 ===== -->
+  <section id="format">
+    <div class="sec-head">
+      <div class="sec-no">02 — 统一格式</div>
+      <h2>格式只有一种，差异全在内容</h2>
+      <p class="sec-desc">官方规范（Agent Skills / SEP-2640）对 Skill 的格式约束极少，这正是它易于远程分发的原因。</p>
+    </div>
+
+    <div class="struct-grid">
+      <div class="tree-panel">
+        <div class="tree-title">SKILL 的物理结构</div>
+        <pre class="tree">your-skill/
+<span class="cm">├─</span> <span class="hl">SKILL.md</span>          <span class="cm"># 必需：规则本体，frontmatter 至少含 name + description</span>
+<span class="cm">├─</span> references/     <span class="cm"># 可选：清单、风格指南、知识文件</span>
+<span class="cm">│</span>   <span class="cm">└─</span> checklist.md
+<span class="cm">├─</span> scripts/        <span class="cm"># 可选：可执行脚本</span>
+<span class="cm">│</span>   <span class="cm">└─</span> extract.py
+<span class="cm">├─</span> examples/       <span class="cm"># 可选：输入输出范例、模板</span>
+<span class="cm">└─</span> assets/         <span class="cm"># 可选：模板、图片等资产</span></pre>
+      </div>
+      <div class="struct-aside">
+        <div class="struct-note">
+          <p>规范只规定两条硬约束：Skill 是一个目录，目录内必须有 <span class="term">SKILL.md</span>；SKILL.md 必须以 YAML frontmatter 开头，至少包含 <span class="term">name</span> 与 <span class="term">description</span>。其余一切内容都是可选的。</p>
+          <p style="margin-top:10px">description 决定 AI 何时调用它，正文决定它怎么做——这个结构让「远程提供方法」成为可能。</p>
+        </div>
+        <div class="struct-fact">
+          <span class="dot"></span>
+          <p>远程 MCP 只分发<b>规则文本</b>（SKILL.md 与附带文件），<b>不执行任何代码</b>。执行永远发生在客户端本地，由你的工具、权限与审批决定。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 视图：适用性分层 ===== -->
+  <section id="fit">
+    <div class="sec-head">
+      <div class="sec-no">03 — 远程适用性</div>
+      <h2>能不能远程用，取决于要不要跑代码</h2>
+      <p class="sec-desc">判断标准只有一条：Skill 的产出是「让 AI 知道怎么做」，还是「让某个脚本跑起来」。</p>
+    </div>
+
+    <div class="fit-band">
+      <div class="fit-card direct">
+        <div class="fit-title">文本指令类 · 远程直接可用</div>
+        <p class="fit-sub">规则、知识、模板、示例、指引、风格、流程——全部是文本。接上 MCP 地址即生效，执行复用客户端已有能力，零本地安装。</p>
+        <ul class="fit-list">
+          <li>01 规则清单 · 02 知识参考 · 03 模板产出</li>
+          <li>04 示例驱动 · 05 工具指引 · 06 角色风格 · 07 工作流 SOP</li>
+          <li>接入后下次连接自动更新，无需重新部署</li>
+        </ul>
+      </div>
+      <div class="fit-card gated">
+        <div class="fit-title">代码执行类 · 可分发，执行受审批门槛</div>
+        <p class="fit-sub">脚本内容可通过 MCP 拉取到本地，但不会自动运行。官方规则要求：未经逐 Skill 的明确用户审批，宿主不得让技能内容触发本地代码执行。</p>
+        <ul class="fit-list">
+          <li>08 脚本执行型：内容远程可读，运行须本地环境</li>
+          <li>frontmatter 声明的钩子 / 脚本字段必须忽略或加审批门槛</li>
+          <li>正文指示模型调用代码执行工具，同样需要审批</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 视图：安全边界 ===== -->
+  <section id="security">
+    <div class="sec-head">
+      <div class="sec-no">04 — 官方安全边界</div>
+      <h2>远程技能被规范视为更高风险面</h2>
+      <p class="sec-desc">MCP 官方 Skills 扩展（SEP-2640）在 Security Considerations 中明确了对远程技能的四条硬规则。</p>
+    </div>
+
+    <div class="sec-rules">
+      <div class="rule-card">
+        <div class="rule-tag">RULE 01</div>
+        <h3>技能内容是不可信输入</h3>
+        <p>MCP 提供的技能内容按不可信模型输入处理，与任何服务端文本一样接受提示注入防御。服务端已连接，不代表它的内容可信——远程技能比远程工具调用风险更高。</p>
+        <div class="src">来源：Security Considerations — Skill content is untrusted input</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-tag">RULE 02</div>
+        <h3>无隐式本地执行</h3>
+        <p>未经逐 Skill 的明确用户审批，宿主不得让技能内容触发本地代码执行。覆盖两类：frontmatter 声明的钩子与脚本字段（必须忽略或审批）；正文中指示模型调用代码执行工具的指令（同样加审批门槛）。</p>
+        <div class="src">来源：Security Considerations — No implicit local execution</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-tag">RULE 03</div>
+        <h3>内容绑定审批</h3>
+        <p>审批绑定到技能的文件清单（每个 uri + digest）。清单一变——文件轮换、增删——既有审批立即失效，必须重新确认后才能加载或执行。</p>
+        <div class="src">来源：Security Considerations — Content-bound approval</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-tag">RULE 04</div>
+        <h3>技能是数据，不是指令</h3>
+        <p>技能资源不比其它上下文更高权威，是否加载完全由用户策略决定。宿主不得把远程技能当作本地文件系统技能同等信任，也不得让同名技能静默覆盖本地技能。</p>
+        <div class="src">来源：Security Considerations — Skills are data, not directives</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 视图：Footer ===== -->
+  <footer>
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="kicker">出处与延伸</div>
+        <p>本页内容依据 MCP 官方 Skills 扩展规范（SEP-2640，Status: Final）与 Skills Over MCP 托管服务的实测行为整理。分类维度为内容形态，非官方规范分类。</p>
+      </div>
+      <div class="foot-links">
+        <h4>延伸阅读</h4>
+        <ul>
+          <li><a href="https://modelcontextprotocol.io/seps/2640-skills-extension" target="_blank" rel="noopener">SEP-2640：Skills 扩展规范</a></li>
+          <li><a href="https://agentskills.io/specification" target="_blank" rel="noopener">Agent Skills 规范</a></li>
+          <li><a href="https://www.skillsovermcp.com/" target="_blank" rel="noopener">Skills Over MCP 托管服务</a></li>
+          <li><a href="https://github.com/modelcontextprotocol/ext-skills" target="_blank" rel="noopener">ext-skills 官方工作组仓库</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-note">本页为静态展示页，不含可执行代码；所有规范引述来自公开文档原文。字体使用系统字体栈，无外部依赖。</div>
+  </footer>
+
+</div>
+</body>
+</html>
